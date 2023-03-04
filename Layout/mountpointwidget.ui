@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+    <class>MountpointWidget</class>
+    <widget class = "QWidget" name = "MountpointWidget">
+        <property name = "windowTitle">
+            <string>Mountpoint</string>
+        </property>
+        <layout class = "QGridLayout" name = "">
+            <item row="0" column="0" colspan="1">
+                <widget class = "QLabel" name = "mountpointAddress">
+                    <property name = "text">
+                        <string></string>
+                    </property>
+                </widget>
+            </item>
+            <item row="0" column="2" colspan="1">
+                <widget class = "QPushButton" name = "startStopStream">
+                    <property name="sizePolicy">
+                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name = "text">
+                        <string>Start</string>
+                    </property>
+                </widget>
+            </item>
+            <item row="0" column="3" colspan="1">
+                <widget class = "QPushButton" name = "editSettings">
+                    <property name="sizePolicy">
+                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name = "text">
+                        <string>Edit</string>
+                    </property>
+                </widget>
+            </item>
+            <item row="0" column="4" colspan="1">
+                <widget class = "QPushButton" name = "closeMountpoint">
+                    <property name="sizePolicy">
+                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name = "text">
+                        <string>X</string>
+                    </property>
+                </widget>
+            </item>
+            <item row="1" column="0" colspan="1">
+                <widget class = "QLabel" name = "socketState">
+                    <property name = "text">
+                        <string>Disconnected</string>
+                    </property>
+                </widget>
+            </item>
+        </layout>
+    </widget>
+    <resources/>
+    <connections/>
+</ui>
