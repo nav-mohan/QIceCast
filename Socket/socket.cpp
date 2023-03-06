@@ -28,14 +28,21 @@ void Socket::initialize()
 {
     qDebug() << "Initializing Socket";
     m_tcpSocket = new QTcpSocket();
+    m_tcpSocket->open(QIODevice::ReadWrite);
     m_readBuffer = (char*)malloc(MOUNTPOINT_READ_BUFFERSIZE);
     m_tcpSocket->setReadBufferSize(MOUNTPOINT_READ_BUFFERSIZE);
     qRegisterMetaType<QAbstractSocket::SocketState>("QAbstractSocket::SocketState");
     qRegisterMetaType<QAbstractSocket::SocketError>("QAbstractSocket::SocketError");
     connect(m_tcpSocket, SIGNAL(errorOccurred(QAbstractSocket::SocketError)),this, SLOT(on_errorOccurred(QAbstractSocket::SocketError)));
     connect(m_tcpSocket,SIGNAL(readyRead()),this,SLOT(on_readyRead()));
-    connect(m_tcpSocket,&QAbstractSocket::stateChanged,this, &Socket::stateChanged);
-    m_tcpSocket->open(QIODevice::ReadWrite);
+    // connect(m_tcpSocket,&QAbstractSocket::stateChanged,this, &Socket::stateChanged);
+    connect(m_tcpSocket,&QAbstractSocket::connected,this,&Socket::authenticate);
+}
+
+void Socket::authenticate()
+{
+    prepareAuthHeader();
+    m_tcpSocket->write(m_authHeader.toUtf8().constData(),(qint64)(m_authHeader.size()));
 }
 
 void Socket::on_stateChanged(QAbstractSocket::SocketState socketState) {
@@ -93,12 +100,36 @@ void Socket::on_readyRead()
 
 void Socket::write(const char *data, qint64 maxSize)
 {
-    qDebug() << "sending data";
-    m_tcpSocket->write(data,maxSize);
+    if(m_tcpSocket->state() == QAbstractSocket::ConnectedState){
+        qDebug() << "sending " << maxSize << " bytes";
+        m_tcpSocket->write(data,maxSize);
+    }
 }
 
 void Socket::on_threadDestroyed() {
     if(m_tcpSocket)
         m_tcpSocket->abort();
-        
+}
+
+void Socket::connectToHost()
+{
+    qDebug() << "Starting Connectinon";
+    m_tcpSocket->connectToHost(m_url.toUtf8().data(),m_port.toInt());
+}
+
+void Socket::disconnectFromHost()
+{
+    qDebug() << "Closing Connectinon";
+    m_tcpSocket->disconnectFromHost();
+}
+
+void Socket::abort()
+{
+    qDebug() << "Aborting Connectinon";
+    m_tcpSocket->abort();
+}
+
+QAbstractSocket::SocketState Socket::getState()
+{
+    return m_tcpSocket->state();
 }

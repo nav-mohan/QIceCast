@@ -37,7 +37,7 @@ MountpointWidget::MountpointWidget(
 
 // Socket
     m_socket = new Socket(m_url,m_port,m_endpoint,m_metadata,m_password,m_mime);
-    // m_socket->moveToThread(m_workerThread);
+    m_socket->moveToThread(m_workerThread);
     connect(m_workerThread,SIGNAL(started()),m_socket,SLOT(initialize()));
     connect(m_socket,&Socket::stateChanged,this, &MountpointWidget::on_socketStateChanged);
     connect(m_workerThread,&QObject::destroyed,m_socket,&Socket::on_threadDestroyed);
@@ -48,6 +48,7 @@ MountpointWidget::MountpointWidget(
     m_encoder->moveToThread(m_workerThread);
     connect(m_workerThread,SIGNAL(started()),m_encoder,SLOT(initialize()));
     connect(this,&MountpointWidget::readyRead, m_encoder,&Encoder::encode);
+    connect(m_encoder,&Encoder::finished,m_socket,&Socket::write);
     
     m_workerThread->start();
 }
@@ -55,27 +56,24 @@ MountpointWidget::MountpointWidget(
 // slot
 void MountpointWidget::on_startStopStream_clicked()
 {
-    QAbstractSocket::SocketState socketState =  m_socket->m_tcpSocket->state();
+    QAbstractSocket::SocketState socketState =  m_socket->getState();
     switch (socketState)
     {
     case QAbstractSocket::UnconnectedState:
-        m_socket->m_tcpSocket->connectToHost(m_url.toUtf8().data(),m_port.toInt());
+        qDebug() << "on_startStopStream_clicked connectToHost";
+        m_socket->connectToHost();
         break;
     case QAbstractSocket::ConnectedState:
-        m_socket->m_tcpSocket->disconnectFromHost();
+        qDebug() << "on_startStopStream_clicked disconnectFromHost";
+        m_socket->disconnectFromHost();
+        break;
     default:
-        m_socket->m_tcpSocket->abort();
+        qDebug() << "on_startStopStream_clicked abort";
+        m_socket->abort();
         break;
     }
 }
 
-// slot
-void MountpointWidget::on_closeMountpoint_clicked()
-{
-    if(m_workerThread!=nullptr && m_workerThread->isRunning())
-        m_workerThread->quit();
-    emit close_mountpoint(m_ui->mountpointAddress->text());
-}
 
 // slot
 void MountpointWidget::on_socketStateChanged(QAbstractSocket::SocketState socketState)
@@ -124,13 +122,16 @@ void MountpointWidget::registerInputBuffer(QCircularBuffer *inputBuffer,qint64 t
 void MountpointWidget::on_readyRead()
 {
     if(m_inputBuffer==nullptr){
-        qDebug() << "undefined m_inputBuffer";
         return;
     }
-    else {
-        qDebug() << "m_inputBuffer!";
-    }
-
     qint64 bytes_read = m_inputBuffer->readTail(m_encoder->m_pcmBuffer,PCM_BUFFERSIZE,m_consumerID);
     emit readyRead(bytes_read);
+}
+
+// slot
+void MountpointWidget::on_closeMountpoint_clicked()
+{
+    if(m_workerThread!=nullptr && m_workerThread->isRunning())
+        m_workerThread->quit();
+    emit close_mountpoint(m_ui->mountpointAddress->text());
 }

@@ -8,7 +8,6 @@
 #include <QString>
 #include <QMap>
 #include <QAbstractSocket>
-
 #include <QTcpSocket>
 
 class Socket : public QObject {
@@ -24,7 +23,7 @@ public:
     );
     ~Socket();
 
-    QTcpSocket *m_tcpSocket = nullptr;
+    QTcpSocket *m_tcpSocket;
     QString m_url;
     QString m_port;
     QString m_endpoint;
@@ -34,6 +33,7 @@ public:
     QString m_authHeader;
     void prepareAuthHeader();
     char *m_readBuffer;
+    QAbstractSocket::SocketState getState();
 
 public slots:
     void initialize();
@@ -42,6 +42,10 @@ public slots:
     void on_errorOccurred(QAbstractSocket::SocketError);
     void write(const char *data, qint64 maxSize);
     void on_threadDestroyed();
+    void connectToHost();
+    void disconnectFromHost();
+    void abort();
+    void authenticate();
 
 signals:
     void stateChanged(QAbstractSocket::SocketState); // this triggers mountpointwidget's socket
