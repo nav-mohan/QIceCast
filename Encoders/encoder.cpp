@@ -1,7 +1,4 @@
 #include "encoder.h"
-#include <stdio.h>
-#include "circularbuffer.h"
-#include "socket.h"
 
 Encoder::~Encoder()
 {
@@ -13,9 +10,11 @@ Encoder::~Encoder()
 
 void Encoder::registerInputBuffer(QCircularBuffer *inputBuffer)
 {
+    qDebug("Encoder Registering inputBUffer");
     m_inputBuffer=inputBuffer;
 }
 void Encoder::registerOutputSocket(Socket *outputSocket)
 {
+    qDebug("Encoder Registering outputSocket");
     m_outputSocket=outputSocket;
 }

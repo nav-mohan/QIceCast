@@ -1,18 +1,15 @@
+#if !defined(SOCKET_H)
+#define SOCKET_H
+
+#include <QTcpSocket>
+#include <QAbstractSocket>
+#include "constants.h"
 #include <QObject>
 #include <QString>
 #include <QMap>
 #include <QAbstractSocket>
 
-class QTcpSocket;
-
-enum socket_state 
-{
-    SOCKET_STATE_DISCONNECTED   = 0,
-    SOCKET_STATE_CONNECTING      = 1,
-    SOCKET_STATE_AUTHENTICATING  = 2,
-    SOCKET_STATE_CONNECTED  = 3,
-    SOCKET_STATE_CLOSING  = 4,
-};
+#include <QTcpSocket>
 
 class Socket : public QObject {
 Q_OBJECT
@@ -26,19 +23,7 @@ public:
         QString mime
     );
     ~Socket();
-    
-public slots:
-    void initialize();
-    void connectToHost();
-    void connected();
-    void dataReceived();
-    void errorOccurred(QAbstractSocket::SocketError);
-    void disconnectFromHost();
-    void abort();
-    void disconnected();
-    void transmit_buffer(const char *data, qint64 maxSize);
 
-private:
     QTcpSocket *m_tcpSocket = nullptr;
     QString m_url;
     QString m_port;
@@ -50,9 +35,18 @@ private:
     void prepareAuthHeader();
     char *m_readBuffer;
 
+public slots:
+    void initialize();
+    void on_readyRead();
+    void on_stateChanged(QAbstractSocket::SocketState);
+    void on_errorOccurred(QAbstractSocket::SocketError);
+    void write(const char *data, qint64 maxSize);
+    void on_threadDestroyed();
+
 signals:
-    void signal_socketError(QString);
-    void signal_socketState(int);
-    void signal_transferRate(qreal);
+    void stateChanged(QAbstractSocket::SocketState); // this triggers mountpointwidget's socket
+
 };
 
+
+#endif // SOCKET_H

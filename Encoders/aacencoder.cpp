@@ -1,6 +1,5 @@
 #include "aacencoder.h"
-#include "constants.h"
-#include <QDebug>
+
 
 void AACEncoder::allocateMemory()
 {

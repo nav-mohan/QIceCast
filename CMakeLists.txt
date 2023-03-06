@@ -13,13 +13,12 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON) # #include "constants.h"
 set(
     CPP_SOURCE_FILES 
 	main.cpp 
-	UI/mainwindow.cpp 
-	UI/mountpointsettingdialog.cpp 
-	UI/mountpointwidget.cpp 
-	UI/audiolevel.cpp 
-	InputDevice/inputbuffer.cpp 
-	InputDevice/circularbuffer.cpp 
-	InputDevice/inputdevice.cpp 
+	UX/mainwindow.cpp 
+	UX/mountpointsettingdialog.cpp 
+	UX/mountpointwidget.cpp 
+	UX/audiolevel.cpp 
+	Audio/circularbuffer.cpp 
+	Audio/inputdevice.cpp 
     Encoders/encoder.cpp 
     Encoders/mpegencoder.cpp 
     Encoders/aacencoder.cpp 
@@ -38,7 +37,7 @@ add_executable(
     ${UI_FILES}
     )
 
-set(APP_INCLUDE_DIR Layout UI InputDevice Encoders Socket)
+set(APP_INCLUDE_DIR Layout UX Audio Encoders Socket)
 set(QT_LINK_LIBRARIES Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia)
 set(LAME_LINK_LIBRARY /opt/homebrew/Cellar/lame/3.100/lib/libmp3lame.a)
 set(LAME_INCLUDE_DIR /opt/homebrew/Cellar/lame/3.100/include)

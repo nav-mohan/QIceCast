@@ -1,5 +1,4 @@
 #include "circularbuffer.h"
-#include <memory>
 
 qint64 QCircularBuffer::readTail(char *data, qint64 maxSize, qint64 consumerID)
 {
@@ -96,12 +95,6 @@ qint64 QCircularBuffer::writeData(const char *data, qint64 maxSize)
         }
     }
 }
-
-
-
-
-
-
 
 
 

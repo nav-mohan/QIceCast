@@ -1,31 +1,5 @@
-// DEBUG
-#include <QDebug>
-
-// UI
-#include "mainwindow.h"
-#include "mountpointsettingdialog.h"
-#include "audiolevel.h"
-#include <QMessageBox>
-#include "mountpointwidget.h"
-
-// Layout
 #include "ui_mainwindow.h"
-
-// Constants
-#include "constants.h"
-
-// Audio Stuff
-#include <QAudio>
-#include <QAudioDeviceInfo>
-#include "circularbuffer.h"
-#include "inputdevice.h"
-#include "encoder.h"
-
-
-#include <QThread>
-#include <string>
-#include <QWidget>
-#include <QDateTime>
+#include "mainwindow.h"
 
 MainWindow::MainWindow() : 
     QMainWindow(),
@@ -42,21 +16,22 @@ MainWindow::MainWindow() :
 
 MainWindow::~MainWindow(){}
 
-void MainWindow::on_deviceOptions_currentIndexChanged(int index) {
-    QAudioDeviceInfo audioDeviceInfo = m_ui->deviceOptions->currentData().value<QAudioDeviceInfo>();
-    QAudioFormat audioFormat;
-    audioFormat.setSampleRate(PCM_SAMPLERATE);
-    audioFormat.setChannelCount(PCM_CHANNELS);
-    audioFormat.setSampleSize(PCM_BITDEPTH);
-    audioFormat.setCodec("audio/pcm");
-    audioFormat.setByteOrder(QAudioFormat::LittleEndian);
-    audioFormat.setSampleType(PCM_SAMPLETYPE);
+void MainWindow::prepareAudioDevice() {
+    m_audioDeviceInfo = m_ui->deviceOptions->currentData().value<QAudioDeviceInfo>();
+    m_audioFormat.setSampleRate(PCM_SAMPLERATE);
+    m_audioFormat.setChannelCount(PCM_CHANNELS);
+    m_audioFormat.setSampleSize(PCM_BITDEPTH);
+    m_audioFormat.setCodec("audio/pcm");
+    m_audioFormat.setByteOrder(QAudioFormat::LittleEndian);
+    m_audioFormat.setSampleType(PCM_SAMPLETYPE);
+}
 
-    // if the thread doesnt exist, create it first
+void MainWindow::on_deviceOptions_currentIndexChanged(int index) {
+    prepareAudioDevice();
+
     if(m_inputThread == nullptr)
         m_inputThread = new QThread();
     
-    // if the thread exists and is running, then stop it
     if(m_inputThread->isRunning())
         m_inputThread->quit();
 
@@ -65,14 +40,18 @@ void MainWindow::on_deviceOptions_currentIndexChanged(int index) {
     connect(m_inputThread,SIGNAL(started()),m_inputBuffer,SLOT(initialize()));
     connect(m_inputThread,SIGNAL(finished()),m_inputBuffer,SLOT(closeBuffer()));
 
-    // if the inputDevice exists, stop it and delete it 
     if(m_inputDevice != nullptr) {
-        m_inputDevice->stopRecording();
-        delete m_inputDevice;
+        emit stopRecording();
+        m_inputDevice->deleteLater();
     }
-    m_inputDevice = new InputDevice(audioDeviceInfo, audioFormat,m_inputBuffer);
+
+    m_inputDevice = new InputDevice(m_audioDeviceInfo, m_audioFormat,m_inputBuffer);
     m_inputDevice->moveToThread(m_inputThread);
     connect(m_inputThread,SIGNAL(started()),m_inputDevice,SLOT(initialize()));
+    connect(this,SIGNAL(startRecording()),m_inputDevice,SLOT(startRecording()));
+    connect(this,SIGNAL(stopRecording()),m_inputDevice,SLOT(stopRecording()));
+    
+    m_inputThread->start();
 
     QMapIterator <QString,MountpointWidget*> mpwItr(m_mountpoints);
     while(mpwItr.hasNext()) {
@@ -86,7 +65,8 @@ void MainWindow::on_deviceOptions_currentIndexChanged(int index) {
     m_inputBuffer->registerConsumer(timestamp);
     connect(m_inputBuffer,&QIODevice::readyRead,m_ui->audioLevel,&AudioLevel::calculateLevels);
 
-    m_inputThread->start();
+    emit startRecording();
+
 }
 
 void MainWindow::on_addMountpoint_clicked() {

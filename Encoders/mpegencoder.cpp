@@ -1,7 +1,4 @@
 #include "mpegencoder.h"
-#include "constants.h"
-#include <QDebug>
-#include "inputbuffer.h"
 
 void MpegEncoder::initialize()
 {
@@ -19,8 +16,8 @@ void MpegEncoder::initialize()
 void MpegEncoder::encode()
 {
     if(m_inputBuffer==nullptr){
-        qDebug() << "undefined m_inputBUffer";
-        // return;
+        qDebug() << "undefined m_inputBuffer";
+        return;
     }
     qint64 bytes_read = m_inputBuffer->read(m_pcmBuffer,PCM_BUFFERSIZE);
     short *pcm_stereo = reinterpret_cast<short*>(m_pcmBuffer);

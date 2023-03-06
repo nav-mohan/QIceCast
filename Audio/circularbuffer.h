@@ -3,6 +3,7 @@
 
 #include <QDebug>
 
+#include <memory>
 #include <QObject>
 #include <QIODevice>
 #include <QReadWriteLock>

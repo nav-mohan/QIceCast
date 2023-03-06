@@ -1,5 +1,6 @@
 #if !defined(INPUTDEVICE_H)
 #define INPUTDEVICE_H
+#include <QDebug>
 
 #include <QAudioInput>
 #include <QAudioFormat>

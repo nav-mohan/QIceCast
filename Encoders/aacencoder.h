@@ -4,6 +4,8 @@
 #include <fdk-aac/aacenc_lib.h>
 #include <QObject>
 #include "encoder.h"
+#include "constants.h"
+#include <QDebug>
 
 class AACEncoder : public Encoder{
 Q_OBJECT

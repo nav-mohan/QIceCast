@@ -22,6 +22,7 @@ MountpointWidget::~MountpointWidget()
     delete m_ui;
 }
 
+// slot
 MountpointWidget::MountpointWidget(
     QWidget* parent, 
     QString url,
@@ -45,32 +46,42 @@ MountpointWidget::MountpointWidget(
     m_ui->startStopStream->setStyleSheet(STARTSTOPSTREAM__START);
     m_workerThread = new QThread();
 
+// Socket
     m_socket = new Socket(m_url,m_port,m_endpoint,m_metadata,m_password,m_mime);
+    // m_socket->moveToThread(m_workerThread);
     connect(m_workerThread,SIGNAL(started()),m_socket,SLOT(initialize()));
-    connect(m_socket,SIGNAL(signal_socketState(int)),this,SLOT(update_socketState(int)));
-    connect(m_workerThread,&QObject::destroyed,m_socket,&Socket::abort);
-    m_socket->moveToThread(m_workerThread);
+    connect(m_socket,&Socket::stateChanged,this, &MountpointWidget::on_socketStateChanged);
+    connect(m_workerThread,&QObject::destroyed,m_socket,&Socket::on_threadDestroyed);
 
+// Encoder
     EncoderFactory *_factory = EncoderFactory::getInstance();
     m_encoder = _factory->make_encoder(m_mime.toUtf8().constData());
     m_encoder->registerInputBuffer(inputBuffer);
     m_encoder->moveToThread(m_workerThread);
-    QObject::connect(m_workerThread,SIGNAL(started()),m_encoder,SLOT(initialize()));
-    QObject::connect(m_encoder,SIGNAL(finished(const char*, qint64)),m_socket,SLOT(transmit_buffer(const char*, qint64)));
+    connect(m_workerThread,SIGNAL(started()),m_encoder,SLOT(initialize()));
+    connect(m_encoder,SIGNAL(finished(const char*, qint64)),m_socket,SLOT(write(const char*, qint64)));
+    
     m_workerThread->start();
 }
 
+// slot
 void MountpointWidget::on_startStopStream_clicked()
 {
-    QString socketState =  m_ui->socketState->text();
-    if(socketState == "Disconnected")
-        m_socket->connectToHost();
-    else if(socketState=="Connected")
-        m_socket->disconnectFromHost();
-    else
-        m_socket->abort();
+    QAbstractSocket::SocketState socketState =  m_socket->m_tcpSocket->state();
+    switch (socketState)
+    {
+    case QAbstractSocket::UnconnectedState:
+        m_socket->m_tcpSocket->connectToHost(m_url.toUtf8().data(),m_port.toInt());
+        break;
+    case QAbstractSocket::ConnectedState:
+        m_socket->m_tcpSocket->disconnectFromHost();
+    default:
+        m_socket->m_tcpSocket->abort();
+        break;
+    }
 }
 
+// slot
 void MountpointWidget::on_closeMountpoint_clicked()
 {
     if(m_workerThread!=nullptr && m_workerThread->isRunning())
@@ -78,33 +89,30 @@ void MountpointWidget::on_closeMountpoint_clicked()
     emit close_mountpoint(m_ui->mountpointAddress->text());
 }
 
-void MountpointWidget::update_socketState(int socketState)
+// slot
+void MountpointWidget::on_socketStateChanged(QAbstractSocket::SocketState socketState)
 {
+    qDebug() << "Socket State : " << socketState;
     switch (socketState)
     {
-    case SOCKET_STATE_DISCONNECTED:
+    case QAbstractSocket::UnconnectedState:
         m_ui->socketState->setText("Disconnected");
         m_ui->startStopStream->setText("Start");
         m_ui->startStopStream->setStyleSheet(STARTSTOPSTREAM__START);
         break;
-    case SOCKET_STATE_CONNECTING:
+    case QAbstractSocket::ConnectingState:
         m_ui->socketState->setText("Connecting...");
         m_ui->startStopStream->setText("Abort");
         m_ui->startStopStream->setStyleSheet(STARTSTOPSTREAM__AWAIT);
         break;
-    case SOCKET_STATE_AUTHENTICATING:
-        m_ui->socketState->setText("Authenticating...");
-        m_ui->startStopStream->setText("Abort");
-        m_ui->startStopStream->setStyleSheet(STARTSTOPSTREAM__AWAIT);
-        break;
-    case SOCKET_STATE_CONNECTED:
+    case QAbstractSocket::ConnectedState:
         m_ui->socketState->setText("Connected");
         m_ui->startStopStream->setText("Stop");
         m_ui->startStopStream->setStyleSheet(STARTSTOPSTREAM__STOP);
         m_encoder->encode();
         break;
     
-    case SOCKET_STATE_CLOSING:
+    case QAbstractSocket::ClosingState:
         m_ui->socketState->setText("Closing...");
         m_ui->startStopStream->setText("Await");
         m_ui->startStopStream->setStyleSheet(STARTSTOPSTREAM__AWAIT);

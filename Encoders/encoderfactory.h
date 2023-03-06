@@ -1,5 +1,10 @@
 #if !defined(ENCODERFACTORY_H)
 #define ENCODERFACTORY_H
+#include <string>
+#include "encoder.h"
+#include "mpegencoder.h"
+#include "aacencoder.h"
+#include <QDebug>
 
 class Encoder;
 

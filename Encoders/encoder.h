@@ -1,6 +1,10 @@
+
 #if !defined(ENCODER_H)
 #define ENCODER_H
 
+#include <stdio.h>
+#include "circularbuffer.h"
+#include "socket.h"
 #include <QObject>
 
 class QCircularBuffer;
@@ -10,7 +14,9 @@ class Encoder : public QObject {
 Q_OBJECT
 
 public:
-    Encoder(){};
+    Encoder() {
+        qDebug("construct encoer");
+    };
     virtual ~Encoder();
 
 public slots:    

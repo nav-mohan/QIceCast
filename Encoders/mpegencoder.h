@@ -5,8 +5,9 @@
 #include <stdlib.h>
 #include <QObject>
 #include "encoder.h"
-
-class InputBuffer;
+#include "circularbuffer.h"
+#include "constants.h"
+#include <QDebug>
 
 class MpegEncoder : public Encoder{
 Q_OBJECT
@@ -23,7 +24,7 @@ public slots:
 
 private:
     lame_global_flags *m_lgf;
-    InputBuffer *m_inputBuffer;
+    QCircularBuffer *m_inputBuffer;
 };
 
 #endif // MPEGENCODER_H

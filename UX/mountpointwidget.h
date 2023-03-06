@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QString>
 #include <QMap>
+#include <QAbstractSocket>
 
 class QCircularBuffer;
 class QThread;
@@ -42,7 +43,7 @@ public:
 public slots:
     void on_closeMountpoint_clicked();
     void on_startStopStream_clicked();
-    void update_socketState(int);
+    void on_socketStateChanged(QAbstractSocket::SocketState);
     
 private:
     Ui::MountpointWidget* m_ui;

@@ -1,9 +1,4 @@
-#include <string>
 #include "encoderfactory.h"
-#include "encoder.h"
-#include "mpegencoder.h"
-#include "aacencoder.h"
-#include <QDebug>
 
 EncoderFactory *EncoderFactory::getInstance()
 {

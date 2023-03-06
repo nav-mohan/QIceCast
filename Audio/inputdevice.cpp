@@ -1,5 +1,4 @@
 #include "inputdevice.h"
-#include <QDebug>
 
 InputDevice::InputDevice(
     QAudioDeviceInfo audioDeviceInfo, 
@@ -14,14 +13,14 @@ InputDevice::InputDevice(
 
 InputDevice::~InputDevice()
 {
-    delete m_audioInput;
-    delete m_circularBuffer;
+    m_audioInput->stop();
+    m_audioInput->deleteLater();
+    m_circularBuffer->deleteLater();
 }
 
 void InputDevice::initialize()
 {
     m_audioInput = new QAudioInput(m_audioDeviceInfo,m_audioFormat);
-    startRecording();
 }
 
 void InputDevice::startRecording()
