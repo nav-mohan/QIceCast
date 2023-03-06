@@ -20,7 +20,7 @@ public:
 
 public slots:
     void initialize() override;
-    void encode() override;
+    void encode(qint64) override;
 
 private:
     lame_global_flags *m_lgf;

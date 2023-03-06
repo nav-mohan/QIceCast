@@ -13,13 +13,8 @@ void MpegEncoder::initialize()
     m_encodeBuffer = (unsigned char*)malloc(LAME_BUFFERSIZE);
 }
 
-void MpegEncoder::encode()
+void MpegEncoder::encode(qint64 bytes_read)
 {
-    if(m_inputBuffer==nullptr){
-        qDebug() << "undefined m_inputBuffer";
-        return;
-    }
-    qint64 bytes_read = m_inputBuffer->read(m_pcmBuffer,PCM_BUFFERSIZE);
     short *pcm_stereo = reinterpret_cast<short*>(m_pcmBuffer);
     short pcm_left[bytes_read/4];
     short pcm_right[bytes_read/4];
@@ -38,6 +33,6 @@ void MpegEncoder::encode()
         m_encodeBuffer,
         LAME_BUFFERSIZE
     );
-    qDebug() << "Done encoding. Now emitting FINISHED signal";
+    qDebug() << "Encoded " << bytes_read << " bytes into " << bytes_encoded << " bytes";
     emit finished(const_cast<const char*>((char*)m_encodeBuffer), bytes_encoded);
 }

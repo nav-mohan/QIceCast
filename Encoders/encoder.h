@@ -14,25 +14,20 @@ class Encoder : public QObject {
 Q_OBJECT
 
 public:
-    Encoder() {
-        qDebug("construct encoer");
-    };
+    Encoder() {qDebug("construct encoer");};
     virtual ~Encoder();
-
-public slots:    
-    virtual void initialize(){};
-    virtual void encode(){};
-    void registerInputBuffer(QCircularBuffer *inputBuffer);
-    void registerOutputSocket(Socket *outputSocket);
-
-signals:
-    void finished(const char*, qint64);
-
-protected:
     QCircularBuffer *m_inputBuffer;
     Socket *m_outputSocket;
     char *m_pcmBuffer = nullptr;
     unsigned char *m_encodeBuffer = nullptr;
+
+public slots:    
+    virtual void initialize(){};
+    virtual void encode(qint64 bytes_read){};
+    void registerOutputSocket(Socket *outputSocket);
+
+signals:
+    void finished(const char*, qint64);
 };
 
 #endif // ENCODER_H

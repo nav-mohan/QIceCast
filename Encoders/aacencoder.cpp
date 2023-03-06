@@ -1,6 +1,5 @@
 #include "aacencoder.h"
 
-
 void AACEncoder::allocateMemory()
 {
 	m_handle = (HANDLE_AACENCODER*)malloc(sizeof(HANDLE_AACENCODER));   memset(m_handle,0,sizeof(HANDLE_AACENCODER));
@@ -55,7 +54,7 @@ void AACEncoder::initialize()
 
 }
 
-void AACEncoder::encode()
+void AACEncoder::encode(qint64 bytes_read)
 {
     // qDebug("encoder received %lld",pcmBufSize);
     // int input_bytes = (int)pcmBufSize;
@@ -63,9 +62,4 @@ void AACEncoder::encode()
     // m_pcmBufDesc->bufSizes = &input_bytes;
     // memcpy(m_pcmBuffer,pcmBuffer,PCM_BUFFERSIZE);
 
-}
-
-void AACEncoder::state_change(uint8_t socketState)
-{
-    qDebug() << socketState;
 }

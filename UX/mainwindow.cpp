@@ -56,8 +56,10 @@ void MainWindow::on_deviceOptions_currentIndexChanged(int index) {
     QMapIterator <QString,MountpointWidget*> mpwItr(m_mountpoints);
     while(mpwItr.hasNext()) {
         mpwItr.next();
-        mpwItr.value()->m_encoder->registerInputBuffer(m_inputBuffer);
-        connect(m_inputBuffer,&QIODevice::readyRead,mpwItr.value(),&MountpointWidget::readyRead);
+        qint64 timestamp = QDateTime::currentDateTime().toSecsSinceEpoch();
+        m_inputBuffer->registerConsumer(timestamp);
+        mpwItr.value()->registerInputBuffer(m_inputBuffer,timestamp);
+        connect(m_inputBuffer,&QIODevice::readyRead,mpwItr.value(),&MountpointWidget::on_readyRead);
     }
 
     qint64 timestamp = QDateTime::currentDateTime().toSecsSinceEpoch();
@@ -113,14 +115,15 @@ void MainWindow::mountpoint_settings_received(int result) {
             endpoint,
             password,
             metadata,
-            mime,
-            m_inputBuffer
+            mime
         );
         
         if(m_inputBuffer) {
             qDebug() << "Registering m_inputBuffer to mountpointwidget's encoder";
-            newMountpointWidget->m_encoder->registerInputBuffer(m_inputBuffer);
-            connect(m_inputBuffer,&QIODevice::readyRead,newMountpointWidget,&MountpointWidget::readyRead);
+            qint64 timestamp = QDateTime::currentDateTime().toSecsSinceEpoch();
+            m_inputBuffer->registerConsumer(timestamp);
+            newMountpointWidget->registerInputBuffer(m_inputBuffer,timestamp);
+            connect(m_inputBuffer,&QIODevice::readyRead,newMountpointWidget,&MountpointWidget::on_readyRead);
         }
 
         newListWidgetItem->setSizeHint(newMountpointWidget->sizeHint());

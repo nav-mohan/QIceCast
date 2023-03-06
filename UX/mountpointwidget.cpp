@@ -1,16 +1,5 @@
-#include "stylesheets.h"
-
-#include <QDebug>
-
 #include "mountpointwidget.h"
-#include "encoder.h"
-#include "encoderfactory.h"
-#include "mpegencoder.h"
-#include "aacencoder.h"
 #include "ui_mountpointwidget.h"
-#include <QThread>
-#include "socket.h"
-#include "constants.h"
 
 MountpointWidget::~MountpointWidget()
 {
@@ -30,8 +19,8 @@ MountpointWidget::MountpointWidget(
     QString endpoint,
     QString password,
     QString metadata,
-    QString mime,
-    QCircularBuffer *inputBuffer) : 
+    QString mime
+    ) : 
     m_ui(new Ui::MountpointWidget), 
     m_url(url),
     m_port(port),
@@ -56,10 +45,9 @@ MountpointWidget::MountpointWidget(
 // Encoder
     EncoderFactory *_factory = EncoderFactory::getInstance();
     m_encoder = _factory->make_encoder(m_mime.toUtf8().constData());
-    m_encoder->registerInputBuffer(inputBuffer);
     m_encoder->moveToThread(m_workerThread);
     connect(m_workerThread,SIGNAL(started()),m_encoder,SLOT(initialize()));
-    connect(m_encoder,SIGNAL(finished(const char*, qint64)),m_socket,SLOT(write(const char*, qint64)));
+    connect(this,&MountpointWidget::readyRead, m_encoder,&Encoder::encode);
     
     m_workerThread->start();
 }
@@ -109,7 +97,6 @@ void MountpointWidget::on_socketStateChanged(QAbstractSocket::SocketState socket
         m_ui->socketState->setText("Connected");
         m_ui->startStopStream->setText("Stop");
         m_ui->startStopStream->setStyleSheet(STARTSTOPSTREAM__STOP);
-        m_encoder->encode();
         break;
     
     case QAbstractSocket::ClosingState:
@@ -125,4 +112,25 @@ void MountpointWidget::on_socketStateChanged(QAbstractSocket::SocketState socket
         break;
     }
 
+}
+
+
+void MountpointWidget::registerInputBuffer(QCircularBuffer *inputBuffer,qint64 timestamp)
+{
+    m_inputBuffer = inputBuffer;
+    m_consumerID = timestamp;
+}
+
+void MountpointWidget::on_readyRead()
+{
+    if(m_inputBuffer==nullptr){
+        qDebug() << "undefined m_inputBuffer";
+        return;
+    }
+    else {
+        qDebug() << "m_inputBuffer!";
+    }
+
+    qint64 bytes_read = m_inputBuffer->readTail(m_encoder->m_pcmBuffer,PCM_BUFFERSIZE,m_consumerID);
+    emit readyRead(bytes_read);
 }

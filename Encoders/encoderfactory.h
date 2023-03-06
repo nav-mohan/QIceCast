@@ -6,8 +6,6 @@
 #include "aacencoder.h"
 #include <QDebug>
 
-class Encoder;
-
 class EncoderFactory {
 
 public:

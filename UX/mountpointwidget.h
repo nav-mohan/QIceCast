@@ -6,11 +6,14 @@
 #include <QString>
 #include <QMap>
 #include <QAbstractSocket>
-
-class QCircularBuffer;
-class QThread;
-class Encoder;
-class Socket;
+#include <QDebug>
+#include "stylesheets.h"
+#include "encoder.h"
+#include "encoderfactory.h"
+#include <QThread>
+#include "socket.h"
+#include "constants.h"
+#include "circularbuffer.h"
 
 namespace Ui{class MountpointWidget;} // namespace Ui
 
@@ -25,8 +28,7 @@ public:
         QString endpoint,
         QString metadata,
         QString password,
-        QString mime,
-        QCircularBuffer *inputBuffer
+        QString mime
     );
     ~MountpointWidget();
     QString m_url;
@@ -38,18 +40,22 @@ public:
     QThread *m_workerThread = nullptr;
     Encoder *m_encoder = nullptr;
     Socket *m_socket = nullptr;
+    QCircularBuffer *m_inputBuffer;
+    void registerInputBuffer(QCircularBuffer*, qint64);
+    qint64 m_consumerID;
     
 
 public slots:
     void on_closeMountpoint_clicked();
     void on_startStopStream_clicked();
     void on_socketStateChanged(QAbstractSocket::SocketState);
+    void on_readyRead();
     
 private:
     Ui::MountpointWidget* m_ui;
 
 signals:
-    void readyRead();
+    void readyRead(qint64 bytes_read);
     void close_mountpoint(QString);
     void announce_error(QString,QString,QString);
 };

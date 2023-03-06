@@ -21,8 +21,7 @@ public:
 
 public slots:
     void initialize() override;
-    void encode() override;
-    void state_change(uint8_t socketState);
+    void encode(qint64 bytes_read) override;
 
 private:
     HANDLE_AACENCODER   *m_handle;
