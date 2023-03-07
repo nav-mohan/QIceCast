@@ -14,6 +14,7 @@
 #include "socket.h"
 #include "constants.h"
 #include "circularbuffer.h"
+#include <QMessageBox>
 
 namespace Ui{class MountpointWidget;} // namespace Ui
 
@@ -43,13 +44,15 @@ public:
     QCircularBuffer *m_inputBuffer;
     void registerInputBuffer(QCircularBuffer*, qint64);
     qint64 m_consumerID;
+    int m_socketState;
     
 
 public slots:
     void on_closeMountpoint_clicked();
     void on_startStopStream_clicked();
-    void on_socketStateChanged(QAbstractSocket::SocketState);
+    void on_socketStateChanged(int);
     void on_readyRead();
+    void on_socketErrored(QString);
     
 private:
     Ui::MountpointWidget* m_ui;
@@ -58,6 +61,9 @@ signals:
     void readyRead(qint64 bytes_read);
     void close_mountpoint(QString);
     void announce_error(QString,QString,QString);
+    void connectToHost();
+    void disconnectFromHost();
+    void abort();
 };
 
 #endif // MOUNTPOINTWIDGET_H

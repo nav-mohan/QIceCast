@@ -27,7 +27,9 @@ MountpointWidget::MountpointWidget(
     m_endpoint(endpoint),
     m_password(password),
     m_metadata(metadata),
-    m_mime(mime),QWidget(parent)
+    m_mime(mime),QWidget(parent),
+    m_consumerID(0),
+    m_socketState(SOCKET_STATE_DISCONNECTED)
 {
     qDebug() << "Creating MountpointWidget";
     m_ui->setupUi(this);
@@ -41,7 +43,11 @@ MountpointWidget::MountpointWidget(
     connect(m_workerThread,SIGNAL(started()),m_socket,SLOT(initialize()));
     connect(m_socket,&Socket::stateChanged,this, &MountpointWidget::on_socketStateChanged);
     connect(m_workerThread,&QObject::destroyed,m_socket,&Socket::on_threadDestroyed);
-
+    connect(this,&MountpointWidget::connectToHost,m_socket,&Socket::connectToHost);
+    connect(this,&MountpointWidget::disconnectFromHost,m_socket,&Socket::disconnectFromHost);
+    connect(this,&MountpointWidget::abort,m_socket,&Socket::abort);
+    connect(m_socket,&Socket::socketErrored, this, &MountpointWidget::on_socketErrored);
+    
 // Encoder
     EncoderFactory *_factory = EncoderFactory::getInstance();
     m_encoder = _factory->make_encoder(m_mime.toUtf8().constData());
@@ -54,62 +60,92 @@ MountpointWidget::MountpointWidget(
 }
 
 // slot
+void MountpointWidget::on_socketErrored(QString errorString)
+{
+    QMessageBox msgBox;
+    msgBox.setWindowTitle("Socket Error");
+    msgBox.setText(errorString);
+    msgBox.setStandardButtons(QMessageBox::Close);
+    msgBox.setDefaultButton(QMessageBox::Close);
+    int ret = msgBox.exec();
+}
+
+// slot
 void MountpointWidget::on_startStopStream_clicked()
 {
-    QAbstractSocket::SocketState socketState =  m_socket->getState();
-    switch (socketState)
+    switch (m_socketState)
     {
-    case QAbstractSocket::UnconnectedState:
+    case SOCKET_STATE_DISCONNECTED:
         qDebug() << "on_startStopStream_clicked connectToHost";
-        m_socket->connectToHost();
+        emit connectToHost();
         break;
-    case QAbstractSocket::ConnectedState:
+    case SOCKET_STATE_CONNECTED:
         qDebug() << "on_startStopStream_clicked disconnectFromHost";
-        m_socket->disconnectFromHost();
+        emit disconnectFromHost();
         break;
     default:
         qDebug() << "on_startStopStream_clicked abort";
-        m_socket->abort();
+        emit abort();
         break;
     }
 }
 
 
 // slot
-void MountpointWidget::on_socketStateChanged(QAbstractSocket::SocketState socketState)
+void MountpointWidget::on_socketStateChanged(int socketState)
 {
-    qDebug() << "Socket State : " << socketState;
-    switch (socketState)
+    m_socketState = socketState;
+    switch (m_socketState)
     {
-    case QAbstractSocket::UnconnectedState:
+    case SOCKET_STATE_DISCONNECTED:
+        qDebug() << "on_socketStateChanged UnconnectedState";
         m_ui->socketState->setText("Disconnected");
         m_ui->startStopStream->setText("Start");
         m_ui->startStopStream->setStyleSheet(STARTSTOPSTREAM__START);
         break;
-    case QAbstractSocket::ConnectingState:
+
+    case SOCKET_STATE_CONNECTING:
+        qDebug() << "on_socketStateChanged ConnectingState";
         m_ui->socketState->setText("Connecting...");
         m_ui->startStopStream->setText("Abort");
         m_ui->startStopStream->setStyleSheet(STARTSTOPSTREAM__AWAIT);
         break;
-    case QAbstractSocket::ConnectedState:
+        
+    case SOCKET_STATE_CONNECTED:
+        qDebug() << "on_socketStateChanged ConnectedState";
         m_ui->socketState->setText("Connected");
+        m_ui->startStopStream->setText("Abort");
+        m_ui->startStopStream->setStyleSheet(STARTSTOPSTREAM__STOP);
+        break;
+
+    case SOCKET_STATE_AUTHENTICATED:
+        qDebug() << "on_socketStateChanged Authenticated";
+        m_ui->socketState->setText("Mountpoint Ready!");
+        m_ui->startStopStream->setText("Stop");
+        m_ui->startStopStream->setStyleSheet(STARTSTOPSTREAM__STOP);
+        break;
+
+    case SOCKET_STATE_AUTHENTICATING:
+        qDebug() << "on_socketStateChanged Auhtenticating";
+        m_ui->socketState->setText("Authenticating...");
         m_ui->startStopStream->setText("Stop");
         m_ui->startStopStream->setStyleSheet(STARTSTOPSTREAM__STOP);
         break;
     
-    case QAbstractSocket::ClosingState:
+    case SOCKET_STATE_CLOSING:
+        qDebug() << "on_socketStateChanged ClosingSTate";
         m_ui->socketState->setText("Closing...");
         m_ui->startStopStream->setText("Await");
         m_ui->startStopStream->setStyleSheet(STARTSTOPSTREAM__AWAIT);
         break;
     
     default:
+        qDebug() << "on_socketStateChanged Default";
         m_ui->socketState->setText("Disconnected");
         m_ui->startStopStream->setText("Start");
         m_ui->startStopStream->setStyleSheet(STARTSTOPSTREAM__START);
         break;
     }
-
 }
 
 

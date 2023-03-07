@@ -35,39 +35,29 @@ void Socket::initialize()
     qRegisterMetaType<QAbstractSocket::SocketError>("QAbstractSocket::SocketError");
     connect(m_tcpSocket, SIGNAL(errorOccurred(QAbstractSocket::SocketError)),this, SLOT(on_errorOccurred(QAbstractSocket::SocketError)));
     connect(m_tcpSocket,SIGNAL(readyRead()),this,SLOT(on_readyRead()));
-    // connect(m_tcpSocket,&QAbstractSocket::stateChanged,this, &Socket::stateChanged);
     connect(m_tcpSocket,&QAbstractSocket::connected,this,&Socket::authenticate);
+    connect(m_tcpSocket,&QAbstractSocket::disconnected,this,&Socket::reset);
+}
+
+void Socket::reset()
+{
+    m_tcpSocket->flush();
+    m_authHeader = "";
+    emit stateChanged(SOCKET_STATE_DISCONNECTED);
 }
 
 void Socket::authenticate()
 {
+    emit stateChanged(SOCKET_STATE_CONNECTED);
     prepareAuthHeader();
     m_tcpSocket->write(m_authHeader.toUtf8().constData(),(qint64)(m_authHeader.size()));
-}
-
-void Socket::on_stateChanged(QAbstractSocket::SocketState socketState) {
-    emit stateChanged(socketState);
-    switch (socketState)
-    {
-    case QAbstractSocket::UnconnectedState:
-        qDebug("Disconnected!");
-        m_authHeader = "";
-        m_tcpSocket->flush();
-        break;
-    case QAbstractSocket::ConnectedState:
-        qDebug("Connected!");
-        prepareAuthHeader();
-        m_tcpSocket->write(m_authHeader.toUtf8().constData(),(qint64)(m_authHeader.size()));
-    default:
-        m_tcpSocket->abort();
-        break;
-    }
+    emit stateChanged(SOCKET_STATE_AUTHENTICATING);
 }
 
 void Socket::on_errorOccurred(QAbstractSocket::SocketError)
 {   
-    qDebug("TCPSOCKET ERROR!!!");
-    qDebug() << m_tcpSocket->errorString();
+    qDebug() << "TCPSOCKET ERROR: " <<  m_tcpSocket->errorString();
+    emit socketErrored(m_tcpSocket->errorString());
 }
 
 void Socket::prepareAuthHeader()
@@ -96,6 +86,23 @@ void Socket::on_readyRead()
     memset(m_readBuffer,0,MOUNTPOINT_READ_BUFFERSIZE);
     qint64 bytes_received = m_tcpSocket->read(m_readBuffer,MOUNTPOINT_READ_BUFFERSIZE);
     qDebug() << m_readBuffer;
+    if(!strncmp(m_readBuffer, "HTTP/1.0 200 OK",12)){
+        qDebug("HTTP OK!");
+        emit stateChanged(SOCKET_STATE_AUTHENTICATED);
+    }
+    else if(!strncmp(m_readBuffer,"HTTP/1.0 403",12)){
+        emit stateChanged(SOCKET_STATE_DISCONNECTED);
+        abort();
+        qDebug("MOUNTPOINT IN USE ALREADY OR TOO MANY MOUNTPOINTS");
+        if(!strncmp(m_readBuffer+bytes_received-17,"Mountpoint in use",17)){
+            qDebug("MOUNTPOINT IN USE!");
+            emit socketErrored("MOUNTPOINT IN USE ALREADY!");
+        }
+        else if(!strncmp(m_readBuffer+bytes_received-26,"too many sources connected",26)){
+            qDebug("TOO MANY SOURCES CONNECTED!");
+            emit socketErrored("TOO MANY SOURCES CONNECTED!");
+        }
+    }
 }
 
 void Socket::write(const char *data, qint64 maxSize)
@@ -127,9 +134,4 @@ void Socket::abort()
 {
     qDebug() << "Aborting Connectinon";
     m_tcpSocket->abort();
-}
-
-QAbstractSocket::SocketState Socket::getState()
-{
-    return m_tcpSocket->state();
 }

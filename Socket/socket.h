@@ -33,12 +33,10 @@ public:
     QString m_authHeader;
     void prepareAuthHeader();
     char *m_readBuffer;
-    QAbstractSocket::SocketState getState();
 
 public slots:
     void initialize();
     void on_readyRead();
-    void on_stateChanged(QAbstractSocket::SocketState);
     void on_errorOccurred(QAbstractSocket::SocketError);
     void write(const char *data, qint64 maxSize);
     void on_threadDestroyed();
@@ -46,9 +44,11 @@ public slots:
     void disconnectFromHost();
     void abort();
     void authenticate();
+    void reset();
 
 signals:
-    void stateChanged(QAbstractSocket::SocketState); // this triggers mountpointwidget's socket
+    void stateChanged(int); // this triggers mountpointwidget's socket
+    void socketErrored(QString);
 
 };
 
