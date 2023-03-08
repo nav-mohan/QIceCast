@@ -1,7 +1,10 @@
 ## Next steps
-### 1. __AAC Encoding__
-### 2. __Network Statistics__
-### 3. __Metadata __
+### 1. AAC Encoding
+### 2. Network Statistics
+### 3. Metadata
+### 4. Make Mountpoint editable
+### 5. Save Mountpoint Settings
+### 6. Generate _Singleton_ log.txt
 
 ----------------
 
