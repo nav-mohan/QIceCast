@@ -24,12 +24,12 @@ void AACEncoder::configEncoder()
 void AACEncoder::initializePcmBuffer()
 {
     m_pcmBuffer = (char*)malloc(PCM_BUFFERSIZE);
-    m_aacBufId = IN_AUDIO_DATA;
-    m_aacBufElSize = 2;
+    m_pcmBufId = IN_AUDIO_DATA;
+    m_pcmBufElSize = 2;
     m_pcmBufDesc->numBufs = 1;
     m_pcmBufDesc->bufs = (void**)&m_pcmBuffer;
-    m_pcmBufDesc->bufferIdentifiers = &m_aacBufId;
-    m_pcmBufDesc->bufElSizes = &m_aacBufElSize;
+    m_pcmBufDesc->bufferIdentifiers = &m_pcmBufId;
+    m_pcmBufDesc->bufElSizes = &m_pcmBufElSize;
 }
 
 void AACEncoder::initializeAacBuffer()
@@ -56,10 +56,13 @@ void AACEncoder::initialize()
 
 void AACEncoder::encode(qint64 bytes_read)
 {
-    // qDebug("encoder received %lld",pcmBufSize);
-    // int input_bytes = (int)pcmBufSize;
-    // m_pcmArgs->numInSamples = input_bytes <= 0 ? -1 : input_bytes/2;
-    // m_pcmBufDesc->bufSizes = &input_bytes;
-    // memcpy(m_pcmBuffer,pcmBuffer,PCM_BUFFERSIZE);
-
+    int input_bytes = (int)bytes_read;
+    m_pcmArgs->numInSamples = input_bytes <= 0 ? -1 : input_bytes/2;
+    m_pcmBufDesc->bufSizes = &input_bytes;
+    aacEncEncode(*m_handle,m_pcmBufDesc,m_aacBufDesc,m_pcmArgs,m_aacArgs);
+    qDebug("encoder convert %d into %d ",input_bytes, m_aacArgs->numOutBytes);
+    if(m_aacArgs->numOutBytes>0){
+        qDebug("Sending %d",m_aacArgs->numOutBytes);
+        emit finished(const_cast<const char*>((char*)m_encodeBuffer), (qint64)m_aacArgs->numOutBytes);
+    }
 }
