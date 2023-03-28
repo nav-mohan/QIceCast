@@ -1,14 +1,19 @@
+# QIceCast
+A Qt based app for serving audio packets to `IceCast`. 
+* Statically compiled with LibMp3Lame and FDK-AAC for MPEG3 and AAC encoding. 
+
+<img src = "QIceCast.png" width = 400>
+
 ## Next steps
-### 1. AAC Encoding
-### 2. Network Statistics
-### 3. Metadata
-### 4. Make Mountpoint editable
-### 5. Save Mountpoint Settings
-### 6. Generate _Singleton_ log.txt
+* Network Statistics
+* Metadata
+* Make Mountpoint editable
+* Save Mountpoint Settings
+* Generate _Singleton_ log.txt
 
 ----------------
 
-## Iceacast HTTP messages
+## Notes on Iceacast HTTP messages
 
 ### 1. __OK: Icecast sends these two in quick succession__
 ```
