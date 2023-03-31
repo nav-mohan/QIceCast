@@ -60,9 +60,9 @@ void AACEncoder::encode(qint64 bytes_read)
     m_pcmArgs->numInSamples = input_bytes <= 0 ? -1 : input_bytes/2;
     m_pcmBufDesc->bufSizes = &input_bytes;
     aacEncEncode(*m_handle,m_pcmBufDesc,m_aacBufDesc,m_pcmArgs,m_aacArgs);
-    qDebug("encoder convert %d into %d ",input_bytes, m_aacArgs->numOutBytes);
+    // qDebug("encoder convert %d into %d ",input_bytes, m_aacArgs->numOutBytes);
     if(m_aacArgs->numOutBytes>0){
-        qDebug("Sending %d",m_aacArgs->numOutBytes);
+        // qDebug("Sending %d",m_aacArgs->numOutBytes);
         emit finished(const_cast<const char*>((char*)m_encodeBuffer), (qint64)m_aacArgs->numOutBytes);
     }
 }

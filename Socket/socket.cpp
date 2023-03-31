@@ -108,7 +108,7 @@ void Socket::on_readyRead()
 void Socket::write(const char *data, qint64 maxSize)
 {
     if(m_tcpSocket->state() == QAbstractSocket::ConnectedState){
-        qDebug() << "sending " << maxSize << " bytes";
+        // qDebug() << "sending " << maxSize << " bytes";
         m_tcpSocket->write(data,maxSize);
     }
 }

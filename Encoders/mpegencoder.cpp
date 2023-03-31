@@ -1,8 +1,16 @@
 #include "mpegencoder.h"
+#include "logger.h"
+
+
+namespace mpeg
+{
+    Logger *loggerinstance = Logger::getInstance();
+} 
 
 void MpegEncoder::initialize()
 {
-    qDebug("initializing mpegencoder");
+    mpeg::loggerinstance->write_log(std::string("Initializing MPEG-Encoder"));
+ 
     m_lgf = lame_init();
     lame_set_mode(m_lgf,LAME_MODE);
     lame_set_in_samplerate(m_lgf,LAME_SAMPLERATE);
@@ -33,6 +41,6 @@ void MpegEncoder::encode(qint64 bytes_read)
         m_encodeBuffer,
         LAME_BUFFERSIZE
     );
-    qDebug() << "Encoded " << bytes_read << " bytes into " << bytes_encoded << " bytes";
+    // qDebug() << "Encoded " << bytes_read << " bytes into " << bytes_encoded << " bytes";
     emit finished(const_cast<const char*>((char*)m_encodeBuffer), bytes_encoded);
 }

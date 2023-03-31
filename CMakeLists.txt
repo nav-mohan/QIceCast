@@ -24,6 +24,7 @@ set(
     Encoders/aacencoder.cpp 
     Encoders/encoderfactory.cpp 
     Socket/socket.cpp 
+    Logger/logger.cpp
 	)
 qt_wrap_ui( 
     UI_FILES 
@@ -37,7 +38,7 @@ add_executable(
     ${UI_FILES}
     )
 
-set(APP_INCLUDE_DIR Layout UX Audio Encoders Socket)
+set(APP_INCLUDE_DIR Layout UX Audio Encoders Socket Logger)
 set(QT_LINK_LIBRARIES Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Multimedia)
 set(LAME_LINK_LIBRARY /opt/homebrew/Cellar/lame/3.100/lib/libmp3lame.a)
 set(LAME_INCLUDE_DIR /opt/homebrew/Cellar/lame/3.100/include)

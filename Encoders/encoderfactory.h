@@ -5,6 +5,7 @@
 #include "mpegencoder.h"
 #include "aacencoder.h"
 #include <QDebug>
+#include "logger.h"
 
 class EncoderFactory {
 
